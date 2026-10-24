@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: managesys-backend
+    runtime: python
+    region: frankfurt
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: NODE_TYPE
+        value: cloud
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: SYNC_REMOTE_URL
+        value: "http://localhost:8001"
+      - key: SYNC_AUTH_TOKEN
+        generateValue: true
+      - key: HUBTEL_CLIENT_ID
+        sync: false
+      - key: HUBTEL_CLIENT_SECRET
+        sync: false
+      - key: HUBTEL_MERCHANT_ACCOUNT_NUMBER
+        sync: false
+      - key: HUBTEL_SANDBOX
+        value: "true"
