@@ -20,6 +20,64 @@ from app.routers import (
 async def lifespan(app: FastAPI):
     # Initialize database tables on startup
     Base.metadata.create_all(bind=engine)
+
+    # Ensure default staff users and classes exist
+    from app.database import SessionLocal
+    from app.models.user import UserModel
+    from app.models.school import ClassModel, FeeModel
+    from datetime import datetime, timezone
+    from decimal import Decimal
+
+    db = SessionLocal()
+    try:
+        now = datetime.now(timezone.utc)
+        if not db.query(UserModel).first():
+            users = [
+                UserModel(id="usr_1", name="Akua Mensah", role="bursar", pin="1234", created_at=now),
+                UserModel(id="usr_2", name="Kwame Asante", role="admin", pin="5678", created_at=now),
+                UserModel(id="usr_3", name="Abena Osei", role="clerk", pin="4321", created_at=now),
+            ]
+            db.add_all(users)
+            db.flush()
+
+        if not db.query(ClassModel).first():
+            classes_map = {
+                "cls_kg1": "KG 1",
+                "cls_kg2": "KG 2",
+                "cls_p1": "Class 1",
+                "cls_p2": "Class 2",
+                "cls_p3": "Class 3",
+                "cls_p4": "Class 4",
+                "cls_p5": "Class 5",
+                "cls_p6": "Class 6",
+                "cls_jhs1": "JHS 1",
+                "cls_jhs2": "JHS 2",
+                "cls_jhs3": "JHS 3",
+            }
+            class_objs = [
+                ClassModel(id=cid, name=cname, created_at=now, updated_at=now)
+                for cid, cname in classes_map.items()
+            ]
+            db.add_all(class_objs)
+            db.flush()
+
+            fees = [
+                FeeModel(id=f"fee_{cid}", class_id=cid, term="Term 1", amount=Decimal(str(amt)), created_at=now, updated_at=now)
+                for cid, amt in [
+                    ("cls_kg1", 950), ("cls_kg2", 950),
+                    ("cls_p1", 1300), ("cls_p2", 1300), ("cls_p3", 1400),
+                    ("cls_p4", 1400), ("cls_p5", 1500), ("cls_p6", 1500),
+                    ("cls_jhs1", 1650), ("cls_jhs2", 1650), ("cls_jhs3", 1800),
+                ]
+            ]
+            db.add_all(fees)
+
+        db.commit()
+    except Exception:
+        db.rollback()
+    finally:
+        db.close()
+
     yield
 
 
